@@ -1,2 +1,61 @@
 <!DOCTYPE html>
 <link href="bar.css" rel="stylesheet">
+<body>
+    <script src="https://d3js.org/d3.v7.js"></script>
+    <script>    
+        const dataset = [
+            [2020,38.51],
+            [2018,51.89],
+            [2016,55.79],
+            [2014,55.42],
+            [2012,56.05],
+            [2010,51.95],
+            [2008,53.41],
+            [2006,43.38],
+            [2004,47.27],
+            [2002,41.99],
+            [2000,43.63],
+            [1998,42.59],
+            [1996,35.63],
+            [1994,32.39],
+            [1992,27.49],
+            [1990,32.15]
+        ]
+
+        const w = 1000
+        const h = 600
+        const padding = 60
+
+        const xScale = d3
+                         .scaleTime()
+                         .domain([new Date(d3.min(dataset, (d) => d[0]),0,0), new Date(d3.max(dataset, (d) => d[0]),12,0)])
+                         .range([padding, w - padding])
+
+        const yScale = d3.scaleLinear()
+                         .domain([0,100])
+                         .range([h - padding, padding])
+
+        const xAxis = d3.axisBottom(xScale)
+
+        const yAxis = d3.axisLeft(yScale)
+                
+        const svg = d3.select('body')
+                      .append('svg')
+                      .attr('width', w)
+                      .attr('height', h)
+
+        svg.append('g')
+           .attr('transform', 'translate(0,'+ (h - padding) +')')
+           .call(xAxis)
+           .attr('id', 'x-axis')
+        
+        svg.append('g')
+           .attr('transform', 'translate('+padding+',0)')
+           .call(yAxis)
+           .attr('id','y-axis')
+
+        svg.append('title')
+            .text('Percentages of cereal crops sprayed with pesticide in the UK from 1990 to 2020')
+            .attr('id', 'title')
+    </script>
+</body>
