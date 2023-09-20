@@ -7,6 +7,11 @@
             align-items: center;
             text-align: center;
         }
+
+        .dot{
+            stroke: black;
+            opacity: 0.8;
+        }
     </style>
 </head>
 <html>
@@ -29,13 +34,14 @@
                                     .domain([d3.min(data, d => d.Year - 1), d3.max(data, d => d.Year + 1)])
                                     .range([padding, w - padding])
                     
-                    console.log(d3.extent(data, d => d.Time));
                     const yScale = d3.scaleTime()
                                     .domain(d3.extent(data, d => {
                                         const time = d.Time.split(':')
                                         return new Date(1970, 1, 1, 0, time[0], time[1])
                                     }))
                                     .range([topPadding, h-padding])
+
+                    const colour = d3.scaleOrdinal(d3.schemeSet1);
                     
                     const xAxis = d3.axisBottom(xScale)
                                     .tickFormat(d3.format('d'))
@@ -59,7 +65,55 @@
                         .call(yAxis)
                         .attr('id','y-axis')
 
-                }
+                    svg.selectAll('circle')
+                        .data(data)
+                        .enter()
+                        .append('circle')
+                        .attr('cy', d => {
+                            const time = d.Time.split(':')
+                            return yScale(new Date(1970, 1, 1, 0, time[0], time[1]))
+                        })
+                        .attr('cx', d => xScale(d.Year))
+                        .attr('r', '5px')
+                        .attr('class', 'dot')
+                        .style('fill', d => colour(d.Doping == ""))
+                        .attr('data-xvalue', d => d.Year)
+                        .attr('data-yvalue', d => {
+                            const time = d.Time.split(':')
+                            return new Date(1970, 1, 1, 0, time[0], time[1])
+                        })
+
+                    const legendContainer = svg.append('g')
+                                    .attr('id', 'legend')
+                                 
+                    const legend = legendContainer.selectAll('#legend')
+                                    .data(colour.domain())
+                                    .enter()
+                                    .append('g')
+                                    .attr('transform', (d, i) => {
+                                        console.log(i)
+                                        return 'translate(0,'+ (h / 2 - i * 30)+')'
+                                    })
+                    legend.append('rect')
+                        .attr('x', w - padding - 20)
+                        .attr('height', 20)
+                        .attr('width', 20)
+                        .style('fill', colour)
+
+                    legend.append('text')
+                        .attr('x', w - padding - 30)
+                        .attr('y', 15)
+                        .style('text-anchor', 'end')
+                        .text(d => {
+                            if(d){
+                                return 'With doping allegations'
+                            }
+                            else{
+                                return 'No doping allegation'
+                            }
+                        })
+                                    
+                    }
             </script>
         </div>
     </body>
