@@ -26,6 +26,11 @@
             const xAxis = d3.axisBottom(xScale)
 
             const yAxis = d3.axisLeft(yScale)
+
+            const tooltip = d3.select('body')
+                                .append('div')
+                                .attr('id','tooltip')
+                                .style('opacity', 0)
                 
             const svg = d3.select('body')
                         .append('svg')
@@ -58,11 +63,17 @@
                 .attr('fill', 'navy')
                 .attr('data-date', d => d[0])
                 .attr('data-gdp', d => d[1])
-                .append('title')
-                .text(d => ('Date: ' + d[0] + ', GDP: ' + d[1]))
-                .attr('id', 'tooltip')
                 .attr('data-date', d => d[0])
                 .attr('data-gdp', d => d[1])
+                .on('mouseover', (e,d) => {
+                    tooltip.style('opacity', 1)
+                            .html('Date: ' + d[0] + "<br>GDP: " + d[1] + " Billion")
+                            .attr('data-gdp', d[1])
+                            .attr('data-date', d[0])
+                })
+                .on('mouseout', () => {
+                    tooltip.style('opacity', 0)
+                })
         }
             
 
