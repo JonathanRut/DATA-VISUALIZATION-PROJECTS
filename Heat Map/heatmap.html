@@ -148,19 +148,22 @@
                                                 .attr('id', 'legend')
                                             
 
-                     legendGraphic.selectAll('rect')
+                                                legendGraphic.selectAll('rect')
                                     .data(colourScale.range().map((colour) => {
                                         const d = colourScale.invertExtent(colour)
-                                        d[0] = d[0] === undefined ? legendScale.domain()[0]:d[0]
-                                        d[1] = d[1] === undefined ? legendScale.domain()[1]:d[1]
+                                        if(d[0] === undefined){
+                                            d[0] = legendScale.domain()[0]
+                                        }
+                                        if(d[1] === undefined){
+                                            d[1] = legendScale.domain()[1]
+                                        }
                                         return d
                                     }))
                                     .enter()
-                                    .insert('rect', '.tick')
-                                    .attr('height', d => (legendScale(d[1]) - legendScale(d[0])))
-                                    .attr('width', d => (legendScale(d[1]) - legendScale(d[0])))
+                                    .insert('rect','.tick')
                                     .attr('x', d => legendScale(d[0]))
-                                    .attr('transform', d=>'translate(0,'+-(legendScale(d[1]) - legendScale(d[0]))+')')
+                                    .attr('width', d => (legendScale(d[1]) - legendScale(d[0])))
+                                    .attr('height', 8)
                                     .style('fill', d => colourScale(d[0]))
                 }
             </script>
