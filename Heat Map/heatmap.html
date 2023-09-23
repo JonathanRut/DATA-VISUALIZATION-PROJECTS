@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://d3js.org/d3.v7.js"></script>
+        <style>
+            .graph{
+                margin: auto;
+                align-items: center;
+                text-align: center;
+            }
+
+            #tooltip{
+                background-color: gray;
+                padding: 10px;
+                border-radius: 8px;
+                position: absolute;
+                pointer-events: none;
+            }
+
+            .cell:hover{
+                stroke-width: 1px;
+                stroke: black;
+            }
+        </style>
+    </head>
+    <body>
+        <div class = 'graph'>
+            <h2 id = "title">Monthly Global Land-Surface Temperature</h2>
+            <h3 id = "description">1753 - 2015: base temperature 8.66℃</h3>
+            <script>
+                const w = 1300
+                const h = 600
+                const padding = 60
+                const topPadding = 20;
+                const bottomPadding = 120;
+
+                const svg = d3.select('.graph')
+                        .append('svg')
+                        .attr('width', w)
+                        .attr('height', h)
+
+                const tooltip = d3.select('body')
+                                    .append('div')
+                                    .attr('id', 'tooltip')
+                                    .style('opacity', 0);    
+                                    
+                        
+                const req = new XMLHttpRequest();
+                req.open('GET', 'https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/global-temperature.json', true)
+                req.send()
+                req.onload = () => {
+                    const json = JSON.parse(req.responseText)
+                    const dataset = json.monthlyVariance;
+
+                    
+
+                    const xScale = d3.scaleLinear()
+                                     .domain(d3.extent(dataset, d => d.year))
+                                     .range([padding, w-padding]);
+                    
+                    const yScale = d3.scaleBand()
+                                     .domain(Array.from(Array(12).keys()))
+                                     .rangeRound([topPadding, h-bottomPadding])
+                                     .paddingInner(0)
+                                     
+                    
+                    const xAxis = d3.axisBottom(xScale)
+                                    .tickFormat(d3.format('d'))
+
+                    const yAxis = d3.axisLeft(yScale)
+                                    .tickFormat((month) => {
+                                        const format = d3.utcFormat('%B')
+                                        return format(new Date(0, month))
+                                    })
+                                    
+
+                    svg.append('g')
+                        .attr('transform', 'translate(0,'+ (h-bottomPadding) +')')
+                        .call(xAxis)
+                        .attr('id', 'x-axis')
+
+                    svg.append('g')
+                        .attr('transform', 'translate('+padding+',0)')
+                        .call(yAxis)
+                        .attr('id', 'y-axis')
+
+                    const tempMin = 8.66 + d3.min(dataset, d=>d.variance)
+                    const tempMax = 8.66 + d3.max(dataset, d=>d.variance)
+                    const numColours = 9
+
+                    const colourScale = d3.scaleThreshold()
+                                            .domain(((max, min, count) => {
+                                                let array = []
+                                                const step = (max - min) / count
+                                                for(let i = 1; i < count; i++){
+                                                    array.push(min + i * step)
+                                                }
+                                                return array
+                                            })(tempMax, tempMin, numColours))
+                                            .range(d3.schemeRdYlBu[numColours].reverse())
+
+
+                   
+                    
+                    const rectWidth = (w - padding * 2) / (d3.max(dataset, d => d.year) - d3.min(dataset, d => d.year))
+                    const rectHeight = (h - topPadding - bottomPadding) / 12
+
+                    console.log(dataset)
+                    console.log(yScale(dataset[12].month -1))
+
+                    svg.selectAll('rect')
+                        .data(dataset)
+                        .enter()
+                        .append('rect')
+                        .attr('x', d => xScale(d.year))
+                        .attr('y', d => yScale(d.month - 1))
+                        .attr('width', rectWidth)
+                        .attr('height', rectHeight)
+                        .style('fill', d => colourScale(d.variance + 8.66))
+                        .attr('class', 'cell')
+                        .attr('data-year', d => d.year)
+                        .attr('data-month', d => d.month - 1)
+                        .attr('data-temp', d=> 8.66 + d.variance)
+                        .on('mouseover', (e,d)=>{
+                            tooltip.style('opacity', 0.9)
+                            tooltip.attr('data-year', d.year)
+                            tooltip.style('left', e.pageX + 'px')
+                            tooltip.style('top', (e.pageY - 10) + 'px')
+                            tooltip.html(d.year + ' - ' + d3.utcFormat('%B')(new Date(0,d.month - 1)) + '<br>' + d3.format('.1f')(8.66 + d.variance)+ '℃')
+                        })
+                        .on('mouseout', () => {
+                            tooltip.style('opacity', 0)
+                        })
+
+                        const legendScale = d3.scaleLinear()
+                                            .domain([tempMin,tempMax])
+                                            .range([60,360])
+                    
+                        const legendAxis = d3.axisBottom(legendScale)
+                                                .tickSize(13)
+                                                .tickValues(colourScale.domain())
+                                                .tickFormat(d3.format('.1f'))
+                                            
+
+                        const legendGraphic = svg.append('g')
+                                                .attr('transform', 'translate(0,'+ (h-padding) +')')
+                                                .call(legendAxis)
+                                                .attr('id', 'legend')
+                                            
+
+                     legendGraphic.selectAll('rect')
+                                    .data(colourScale.range().map((colour) => {
+                                        const d = colourScale.invertExtent(colour)
+                                        d[0] = d[0] === undefined ? legendScale.domain()[0]:d[0]
+                                        d[1] = d[1] === undefined ? legendScale.domain()[1]:d[1]
+                                        return d
+                                    }))
+                                    .enter()
+                                    .insert('rect', '.tick')
+                                    .attr('height', d => (legendScale(d[1]) - legendScale(d[0])))
+                                    .attr('width', d => (legendScale(d[1]) - legendScale(d[0])))
+                                    .attr('x', d => legendScale(d[0]))
+                                    .attr('transform', d=>'translate(0,'+-(legendScale(d[1]) - legendScale(d[0]))+')')
+                                    .style('fill', d => colourScale(d[0]))
+                }
+            </script>
+        </div>
+    </body>
+</html>
