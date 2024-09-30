@@ -1,6 +1,6 @@
 # DATA-VISUALIZATION-PROJECTS
 A project of different datasets graphed using D3.
-Projects required for Data Visualization module of Data Science Fundamentals course.
+Projects required for Data Visualization module of [Data Science Fundamentals course](https://academy.topcoder.com/tca-certifications/data-science-fundamentals).
 
 ## Bar Chart
 A bar chart showing United States GDP from 1947 to 2015.
